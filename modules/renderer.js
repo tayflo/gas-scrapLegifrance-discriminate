@@ -24,10 +24,21 @@ function renderRichtext(text, colorMatrice) {
  * @returns {TextStyle}
  */
 function renderTextstyle(word, colorMatrice) {
+  // // From 0 to 100
+  // const specificity = word.text.specificityRange
+  //   ? Math.floor(100 * (word.textEntry.specificity - word.text.specificityMin) / word.text.specificityRange)
+  //   : 0;
+  // // From 0 to 100
+  // const distinctiveness = word.corpus.distinctivenessRange
+  //   ? Math.floor(100 * (word.corpusEntry.distinctiveness - word.corpus.distinctivenessMin) / word.corpus.distinctivenessRange)
+  //   : 0;
+
   // From 0 to 100
-  const specificity = word.text.specificityRange ? Math.floor(100 * (word.specificity - word.text.minSpecificity) / word.text.specificityRange) : 0;
+  const specificity = Math.floor(100 * (word.textEntry.specificity - word.text.specificityMin) / word.text.specificityRange);
   // From 0 to 100
-  const distinctiveness = word.corpus.distinctivenessRange ? Math.floor(100 * (word.corpusWord.distinctiveness - word.corpus.minDistinctiveness) / word.corpus.distinctivenessRange) : 0;
+  const distinctiveness = Math.floor(100 * (word.corpusEntry.distinctiveness - word.corpus.distinctivenessMin) / word.corpus.distinctivenessRange);
+
+  console.log(`This word as a specificity of ${specificity} and a distinctiveness of ${distinctiveness}`);
 
   const color = colorMatrice[distinctiveness][specificity];
   const textStyle = SpreadsheetApp.newTextStyle()

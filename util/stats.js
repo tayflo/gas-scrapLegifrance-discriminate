@@ -18,7 +18,7 @@ function sum(array) {
  * @returns {number}
  */
 function mean(array) {
-  return sum(array) / array.length;
+  return (sum(array) / array.length);
 }
 
 /**

@@ -35,7 +35,7 @@ function colorizeText() {
   const values = range.getValues();
 
   const a = matrice_toArray(values);
-  const textArray = a.array;
+  const textsArray = a.array;
   const indexes = a.indexes;
 
   const topLeft = [0, 0, 190]; // Dark Blue
@@ -46,9 +46,7 @@ function colorizeText() {
   const colorMatrice = genColorMatrice(granularity, granularity, topLeft, topRight, botLeft, botRight);
 
   const richTextValues = [];
-  const corpus = new Corpus(textArray);
-  corpus.removeIgnoredWords();
-  corpus.calculateStats();
+  const corpus = new Corpus(textsArray);
   for (const text of corpus.texts) {
     richTextValues.push(renderRichtext(text, colorMatrice));
   }

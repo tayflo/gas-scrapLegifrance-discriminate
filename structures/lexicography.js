@@ -1,5 +1,5 @@
 // ESLint global variables
-/* global sum std */
+/* global sum std mean */
 
 /**
  * RÉFLEXION EN AMONT
@@ -20,7 +20,7 @@
  * txNb : nombre de texte
  * txSz[tx] : nombre de mots dans le texte
  * woTxNb[tx] : nombre d'occurrences du mot dans chaque texte, par texte
- * woTxFq[tx] : fréquence du mot dans chaque texte (= woTxNb / txSz) (ie. on pondère le nombre d'occurences par le volume du texte)
+ * woTxFq[tx] : fréquence du mot dans chaque texte (= woTxNb / txSz) (ie. on pondère le nombre d'occurrences par le volume du texte)
  * alWoTxFq[woTxFq[tx]] : fréquences de chaque mot dans chaque texte
  *
  * woDis = woTxFqStd = std(woTxFq[]) : écart-type de la répartition des fréquences du mot entre les textes
@@ -48,20 +48,21 @@ const toIgnore = ["la", "le", "les", "un", "des", "de", "du", "en", "à", "aux",
 
 class Corpus {
   /**
-   * @param {string[]} textArray
+   * @param {string[]} textsArray
    */
-  constructor(textArray) {
+  constructor(textsArray) {
     /**
+     * Texts of the corpus.
      * @type {Text[]}
      */
     this.texts = [];
-    for (const string of textArray) {
+    for (const string of textsArray) {
       const text = new Text(this, string);
       this.texts.push(text);
     }
 
-    // Setting up the dictionary. Process every words.
     /**
+     * Every words of the corpus, unfiltered, in order of appearance.
      * @type {TextWord[]}
      */
     this.everyWords = [];
@@ -73,28 +74,40 @@ class Corpus {
      * Number of (non-unique) words in the whole corpus.
      * @type {number}
      */
-    this.length = this.everyWords.length;
+    this.size = this.everyWords.length;
 
     /**
-     * Dictionary (or lexicon, glossary, vocabulary). Map of unique corpus words. Keyed by word value.
-     * @type {Map<string:CorpusWord>}
+     * Dictionary of the corpus (could also be called: lexicon, glossary, vocabulary).
+     * Map of unique corpus words. Keyed by word value.
+     * @type {Map<string:CorpusEntry>}
      */
     this.dictionary = new Map();
-    for (const textWord of this.everyWords) {
-      const wordStr = textWord.value.toLowerCase();
+    for (const word of this.everyWords) {
+      const wordStr = word.value.toLowerCase();
       // Keep only unique values.
       if (!this.dictionary.has(wordStr)) {
-        this.dictionary.set(wordStr, new CorpusWord(this, wordStr));
+        this.dictionary.set(wordStr, new CorpusEntry(this, wordStr));
       }
-      const corpusWord = this.dictionary.get(wordStr);
+      const corpusEntry = this.dictionary.get(wordStr);
 
-      // Categorize this word to its corpus word reference.
-      // rq: Okay? Pass by ref?
-      textWord.corpusWord = corpusWord;
+      if (!word.textEntry.corpusEntry) {
+        const textEntry = word.textEntry;
+        // Update textEntry to reference the corpusEntry
+        textEntry.corpusEntry = corpusEntry;
+        // Store this text entry.
+        corpusEntry.entries.push(textEntry);
+      }
 
-      // Store this instance of the corpus word.
-      corpusWord.instances.push(textWord);
+      // Document the word instance object with its dictionary entry counterpart.
+      word.corpusEntry = corpusEntry;
+
+      // Store this instance of the entry.
+      corpusEntry.instances.push(word);
     }
+
+    // Once everyting is set, we can make some calculation on the whole corpus.
+    this.removeIgnoredWords();
+    this.calculateStats();
   }
 
   removeIgnoredWords() {
@@ -122,48 +135,74 @@ class Corpus {
     }
   }
 
-  // rq: Getters re-calculate each time they are called.
+  /**
+   * Calculate statistics relative to the corpus, its texts and their entries.
+   * rq: Getters re-calculate each time they are called. Fix their result once and for all result in significant performance gain.
+   * rq: Size has already been calculated.
+   */
   calculateStats() {
-    this.maxDistinctiveness = this.getMaxDistinctiveness;
-    this.minDistinctiveness = this.getMinDistinctiveness;
-    this.maxSpecificity = this.getMaxSpecificity;
-    this.minSpecificity = this.getMinSpecificity;
+
+    this.dictionary.forEach(entry => entry.calculateStats());
+    // rq: We calculate text stats here, not in text constructor, because some text-related stats take into account corpus-scope values. So we need to have defined these before.
+    this.texts.forEach(text => text.calculateStats());
+
+    this.frequencyMean = this.getFrequencyMean;
+    this.dictionary.forEach(entry => entry.calculateStatsAdvanced());
+
+    this.distinctivenessMax = this.getDistinctivenessMax;
+    this.distinctivenessMin = this.getDistinctivenessMin;
     this.distinctivenessRange = this.getDistinctivenessRange;
+
+    // These are useless.
+    this.specificityMax = this.getSpecificityMax;
+    this.specificityMin = this.getSpecificityMin;
     this.specificityRange = this.getSpecificityRange;
-    for (const text of this.texts) {
-      text.calculateStats();
-    }
   }
 
-  get getMaxDistinctiveness() {
+  /**
+   * Mean of text entries frequencies. (NOT mean of corpus entries frequencies.)
+   * @type {number}
+   */
+  get getFrequencyMean() {
+    const frequencies = [];
+    const dictionaries = this.texts.map(text => text.dictionary);
+    for (const dictionary of dictionaries) {
+      frequencies.push(...Array.from(dictionary, ([k, textEntry]) => textEntry.frequency));
+    }
+    dictionaries.map(textEntry => textEntry.frequency);
+    return mean(frequencies);
+  }
+
+  get getDistinctivenessMax() {
     const array = Array.from(this.dictionary, ([k, v]) => v.distinctiveness);
     return Math.max(...array);
   }
 
-  get getMinDistinctiveness() {
+  get getDistinctivenessMin() {
     // See https://hackernoon.com/how-to-map-a-map-12c6ef1c5b2e
-    // rq: Frequent that minDistinctiveness is NaN.
+    // rq: Frequent that distinctivenessMin is NaN.
     // Because of a distinctiveness equals to NaN. When it happens, Math.min() returns NaN
     const array = Array.from(this.dictionary, ([k, v]) => v.distinctiveness);
     return Math.min(...array);
   }
 
   get getDistinctivenessRange() {
-    return this.maxDistinctiveness - this.minDistinctiveness;
+    return this.distinctivenessMax - this.distinctivenessMin;
   }
 
-  get getMaxSpecificity() {
-    const array = this.everyWords.map(v => v.specificity);
-    return Math.max(...array);
+  // rq: Specificity is bound to a text. So no need to have its range for the corpus.
+  get getSpecificityMax() {
+    const specificities = this.texts.map(text => text.specificityMax);
+    return Math.max(...specificities);
   }
 
-  get getMinSpecificity() {
-    const array = this.everyWords.map(v => v.specificity);
-    return Math.min(...array);
+  get getSpecificityMin() {
+    const specificities = this.texts.map(text => text.specificityMin);
+    return Math.min(...specificities);
   }
 
   get getSpecificityRange() {
-    return this.maxSpecificity - this.minSpecificity;
+    return this.specificityMax - this.specificityMin;
   }
 }
 
@@ -196,65 +235,72 @@ class Text {
       word.end = word.start + word.value.length;
       this.words.push(word);
     }
+
+    /**
+     * Dictionary of the text (could also be called: lexicon, glossary, vocabulary).
+     * Map of unique text words. Keyed by word value.
+     * @type {Map<string:TextEntry>}
+     */
+    this.dictionary = new Map();
+    for (const word of this.words) {
+      const wordStr = word.value.toLowerCase();
+      // Keep only unique values.
+      if (!this.dictionary.has(wordStr)) {
+        this.dictionary.set(wordStr, new TextEntry(this, wordStr));
+      }
+      const textEntry = this.dictionary.get(wordStr);
+
+      // Document the word instance object with its dictionary entry counterpart.
+      word.textEntry = textEntry;
+
+      // Store this instance of the entry.
+      textEntry.instances.push(word);
+    }
   }
 
   /**
-   * Length of this text, i.e. number of words in this text.
-   * @type {number}
+   * Calculates statistics relative to this text and its entries.
    */
-  get length() {
-    return this.words.length;
-  }
-
   calculateStats() {
-    this.maxSpecificity = this.getMaxSpecificity;
-    this.minSpecificity = this.getMinSpecificity;
+    this.size = this.getSize;
+    this.dictionary.forEach(entry => entry.calculateStats());
+    this.specificityMax = this.getSpecificityMax;
+    this.specificityMin = this.getSpecificityMin;
     this.specificityRange = this.getSpecificityRange;
   }
 
-  get getMaxSpecificity() {
-    const array = this.words.map(v => v.specificity);
-    return Math.max(...array);
+  /**
+   * Size of this text, i.e. number of words in this text.
+   * @type {number}
+   */
+  get getSize() {
+    return this.words.length;
   }
 
-  get getMinSpecificity() {
-    const array = this.words.map(v => v.specificity);
-    return Math.min(...array);
+  get getSpecificityMax() {
+    const specificities = Array.from(this.dictionary, ([k, entry]) => entry.specificity);
+    return Math.max(...specificities);
+  }
+
+  get getSpecificityMin() {
+    const specificities = Array.from(this.dictionary, ([k, entry]) => entry.specificity);
+    return Math.min(...specificities);
   }
 
   get getSpecificityRange() {
-    return this.maxSpecificity - this.minSpecificity;
-  }
-}
-
-class Word {
-  constructor() {
-    /**
-     * @type {string}
-     */
-    this.value;
-  }
-
-  /**
-   * @type {number}
-   * @readonly
-   */
-  get length() {
-    return this.value.length;
+    return this.specificityMax - this.specificityMin;
   }
 }
 
 /**
  * Word instance in the text.
  */
-class TextWord extends Word {
+class TextWord {
   /**
    * @param {Text} text
    * @param {string} value
    */
   constructor(text, value) {
-    super();
-
     /**
      * Parent text.
      * @type {Text}
@@ -287,39 +333,103 @@ class TextWord extends Word {
     this.end;
 
     /**
-     * Parent corpus word, reference in dictionary.
-     * (Defined when processing the dictionary.)
-     * @type {CorpusWord}
+     * Parent text entry, reference in text dictionary.
+     * (Defined when processing the text dictionary.)
+     * @type {TextEntry}
      */
-    this.corpusWord;
+    this.textEntry;
+
+    /**
+     * Parent corpus entry, reference in corpus dictionary.
+     * (Defined when processing the corpus dictionary.)
+     * @type {CorpusEntry}
+     */
+    this.corpusEntry;
+  }
+}
+
+/**
+ * An entry in a corpus dictionary or text dictionary.
+ */
+class Entry {
+  /**
+   * @param {Text|Corpus} parent
+   * @param {string} value
+   */
+  constructor(parent, value) {
+    /**
+     * Parent map of words, text or corpus.
+     * @type {Text|Corpus}
+     */
+    this.parent = parent;
+
+    /**
+     * Value of the word. Is the key in the dictionary.
+     * @type {string}
+     */
+    this.value = value;
+
+    /**
+     * Every instance of this word in this corpus/text.
+     * (Defined when making up dictionary.)
+     * @type {TextWord[]}
+     */
+    this.instances = [];
   }
 
   /**
-   * @deprecated
-   * End index of this word in the text.
-   * @type {number}
-   * @readonly
+   * Calculate statistics relative to this entry (occurrence, frequency)
+   * Beware that required properties have been already calculated on call.
    */
-  get _end() {
-    return this.start + this.value.length;
+  calculateStats() {
+    this.occurrence = this.getOccurrence;
+    this.frequency = this.getFrequency;
   }
 
   /**
-   * Number of occurences of this word in this text.
+   * Number of occurrences of this word in this corpus/text.
    * @type {number}
    * @readonly
    */
-  get occurence() {
-    return this.text.words.filter(word => word.value === this.value).length;
+  get getOccurrence() {
+    return this.instances.length;
   }
 
   /**
-   * Frequency of this word in this text.
+   * Frequency of this word in this corpus/text.
    * @type {number}
    * @readonly
    */
-  get frequency() {
-    return (this.occurence / this.text.words.length);
+  get getFrequency() {
+    return (this.occurrence / this.parent.size);
+  }
+}
+
+/**
+ * An entry in the text dictionary.
+ */
+class TextEntry extends Entry {
+  /**
+   * @param {Text} text
+   * @param {string} value
+   */
+  constructor(text, value) {
+    super(text, value);
+
+    /**
+     * Corpus entry counterpart, reference in corpus dictionary.
+     * (Defined when processing the corpus dictionary.)
+     * @type {CorpusEntry}
+     */
+    this.corpusEntry;
+  }
+
+  /**
+   * Calculate statistics relative to this entry (occurrence, frequency, specificity)
+   */
+  calculateStats() {
+    super.calculateStats();
+    this.specificity = this.getSpecificity;
   }
 
   /**
@@ -327,90 +437,46 @@ class TextWord extends Word {
    * Ratio between frequency in this text, and mean frequency for this word in the whole corpus.
    * rq: Couldn't we use only the global frequency? The more frequent the word, the less revalating he is.
    *
-   * D_f(freq) = [0 ; 1]
-   * D_f(freq^-1) = ]+infinity ; 1]
-   * D_f(1 - freq) = [1 ; 0]
-   *
    * Spécificité du mot dans le texte donné. Confère au texte un caractère singulier.
    * Ratio entre la fréquence du mot dans ce texte, et la fréquence du mot dans l'ensemble du corpus.
    * @type {number}
    */
-  get specificity() {
-    // Frequency of this word in the corpus as a whole
-    const freq = this.corpusWord.globalOccurence / this.corpus.length;
-    return (this.frequency / freq); // D_f = ]0 ; +infinity[
-
-  }
-
-  /**
-   * @deprecated
-   */
-  get _specificity() {
-    // Occurence of this word in all texts but this one. (Inverse word weight in this text compared to the whole corpus. Lesser value means this text accounts for a significant part of words occurrences in whole corpus.)
-    const occ = this.corpusWord.globalOccurence - this.occurence;
-    // Length of the other texts. (Inverse text weight compared to the whole corpus. The higher the value, the lighter the text)
-    const len = this.corpus.length - this.text.length;
-    // Frequency of this word in the other texts (all text but this one)
-    const otherFreq = occ / len;
-    // Frequency of this word in the corpus as a whole
-    const freq = this.corpusWord.globalOccurence / this.corpus.length;
-
-    // We pass it through x^-1 to emphasize small values, and then revert back
-    // return (Math.pow(freq, -1) - Math.pow(this.frequency, -1)); // D_f = ]-infinity ; +infinity[ rq: x^-1 requires x != 0 (should be ok)
-
-    // rq: On met au ^2 la seconde partie pour éviter qu'un mot peu fréquent dans le texte et absent ailleurs ai la même spécificité qu'un mot très fréquent dans le texte et un peu moins fréquent ailleurs
-    // TODO: Normaliser la répartition pour effacer les valeurs extrêmes
-    return (this.frequency - Math.pow(otherFreq, 2));
+  get getSpecificity() {
+    return (this.frequency / this.corpusEntry.frequency); // D_f = ]0 ; +infinity[ (D_f(freq) = ]0 ; 1])
   }
 }
 
 /**
  * An entry in the corpus dictionary.
  */
-class CorpusWord extends Word {
+class CorpusEntry extends Entry {
   /**
    * @param {Corpus} corpus
    * @param {string} value
    */
   constructor(corpus, value) {
-    super();
+    super(corpus, value);
 
     /**
-     * Parent corpus.
-     * @type {Corpus}
+     * Array of text entries for this corpus entry.
+     * (Defined when processing the corpus dictionary.)
+     * @useless
      */
-    this.corpus = corpus;
-
-    /**
-     * Value of the word. Is the key in the corpus dictionary.
-     * @type {string}
-     */
-    this.value = value;
-
-    /**
-     * Every instance of this word in texts.
-     * (Defined when making up corpus dictionary.)
-     * @type {TextWord[]}
-     */
-    this.instances = [];
+    this.entries = [];
   }
 
   /**
-   * Number of occurrence of this word in the whole corpus.
-   * @type {number}
-   * @readonly
+   * Basic stats (occurrences, frequency).
    */
-  get globalOccurence() {
-    return this.instances.length;
-    // rq: Should also be equal to sum of occurrences of the word in each text.
+  calculateStats() {
+    super.calculateStats();
   }
 
   /**
-   * @type {number}
-   * @readonly
+   * Advanced stats (distinctiveness)
    */
-  get globalFrequency() {
-    return (this.globalOccurences / this.corpus.length);
+  calculateStatsAdvanced() {
+    this.distinctiveness = this.getDistinctiveness;
   }
 
   /**
@@ -427,10 +493,8 @@ class CorpusWord extends Word {
    *
    * @type {number}
    */
-  get distinctiveness() {
-    const frequencies = this.instances.map(word => word.frequency);
-    // TODO: Mean
-    // kfdùsml kml
-    return std(frequencies) ;
+  get getDistinctiveness() {
+    const frequencies = this.entries.map(textEntry => textEntry.frequency);
+    return (std(frequencies) / this.parent.frequencyMean);
   }
 }
