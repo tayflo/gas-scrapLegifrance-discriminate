@@ -123,7 +123,7 @@ class Corpus {
   }
 
   // rq: Getters re-calculate each time they are called.
-  getMinMaxRange() {
+  calculateStats() {
     this.maxDistinctiveness = this.getMaxDistinctiveness;
     this.minDistinctiveness = this.getMinDistinctiveness;
     this.maxSpecificity = this.getMaxSpecificity;
@@ -131,7 +131,7 @@ class Corpus {
     this.distinctivenessRange = this.getDistinctivenessRange;
     this.specificityRange = this.getSpecificityRange;
     for (const text of this.texts) {
-      text.getMinMaxRange();
+      text.calculateStats();
     }
   }
 
@@ -206,7 +206,7 @@ class Text {
     return this.words.length;
   }
 
-  getMinMaxRange() {
+  calculateStats() {
     this.maxSpecificity = this.getMaxSpecificity;
     this.minSpecificity = this.getMinSpecificity;
     this.specificityRange = this.getSpecificityRange;
@@ -244,6 +244,9 @@ class Word {
   }
 }
 
+/**
+ * Word instance in the text.
+ */
 class TextWord extends Word {
   /**
    * @param {Text} text
@@ -321,7 +324,7 @@ class TextWord extends Word {
 
   /**
    * Specificity of the word for the text.
-   * Distance between frequency in this text, and mean frequency in the whole corpus.
+   * Ratio between frequency in this text, and mean frequency for this word in the whole corpus.
    * rq: Couldn't we use only the global frequency? The more frequent the word, the less revalating he is.
    *
    * D_f(freq) = [0 ; 1]
@@ -329,15 +332,14 @@ class TextWord extends Word {
    * D_f(1 - freq) = [1 ; 0]
    *
    * Spécificité du mot dans le texte donné. Confère au texte un caractère singulier.
-   * Distance entre la fréquence du mot dans ce texte, et la fréquence du mot dans les autres textes.
+   * Ratio entre la fréquence du mot dans ce texte, et la fréquence du mot dans l'ensemble du corpus.
    * @type {number}
    */
   get specificity() {
     // Frequency of this word in the corpus as a whole
     const freq = this.corpusWord.globalOccurence / this.corpus.length;
-    // We pass it through x^-1 to emphasize small values, and then revert back
     return (this.frequency / freq); // D_f = ]0 ; +infinity[
-    // return (Math.pow(freq, -1) - Math.pow(this.frequency, -1)); // D_f = ]-infinity ; +infinity[ rq: x^-1 requires x != 0 (should be ok)
+
   }
 
   /**
@@ -349,10 +351,16 @@ class TextWord extends Word {
     // Length of the other texts. (Inverse text weight compared to the whole corpus. The higher the value, the lighter the text)
     const len = this.corpus.length - this.text.length;
     // Frequency of this word in the other texts (all text but this one)
-    const freq = occ / len;
+    const otherFreq = occ / len;
+    // Frequency of this word in the corpus as a whole
+    const freq = this.corpusWord.globalOccurence / this.corpus.length;
+
+    // We pass it through x^-1 to emphasize small values, and then revert back
+    // return (Math.pow(freq, -1) - Math.pow(this.frequency, -1)); // D_f = ]-infinity ; +infinity[ rq: x^-1 requires x != 0 (should be ok)
+
     // rq: On met au ^2 la seconde partie pour éviter qu'un mot peu fréquent dans le texte et absent ailleurs ai la même spécificité qu'un mot très fréquent dans le texte et un peu moins fréquent ailleurs
     // TODO: Normaliser la répartition pour effacer les valeurs extrêmes
-    return (this.frequency - Math.pow(freq, 2));
+    return (this.frequency - Math.pow(otherFreq, 2));
   }
 }
 

@@ -48,7 +48,7 @@ function colorizeText() {
   const richTextValues = [];
   const corpus = new Corpus(textArray);
   corpus.removeIgnoredWords();
-  corpus.getMinMaxRange();
+  corpus.calculateStats();
   for (const text of corpus.texts) {
     richTextValues.push(renderRichtext(text, colorMatrice));
   }
