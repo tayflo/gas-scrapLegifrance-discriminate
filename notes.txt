@@ -1,0 +1,38 @@
+
+# Retrouver un numéro de dossier législatif
+
+1) à partir de la page AN du dossier législatif
+view-source:http://www.assemblee-nationale.fr/dyn/15/dossiers/fausses_informations_lutte
+<div data-dossier-id="DLR5L15N36488" class="titre-bandeau-bleu clearfix bottommargin-lg ">
+
+2) à partir de la page AN du dossier législatif (aperçu sur une page)
+view-source:http://www.assemblee-nationale.fr/dyn/15/dossiers/alt/fausses_informations_lutte
+<div data-dossier-id="DLR5L15N36488" class="titre-bandeau-bleu clearfix">
+
+
+# search: "fausses informations"
+
+in C:\Users\Tancrède\Dropbox\_Programmation\data\Dossiers_Legislatifs_XV.json\json\dossierParlementaire\
+DLR5L15N36468.json //organique
+DLR5L15N36488.json //ordinaire
+DLR5L15N36631.json
+
+in C:\Users\Tancrède\Dropbox\_Programmation\data\syseron.xml\xml\compteRendu\
+Quatre groupe de débats font un appel très fréquent au terme
+CRSANR5L15S2018E1N001.xml
+CRSANR5L15S2018E1N002.xml
+
+CRSANR5L15S2018O1N259.xml
+CRSANR5L15S2018O1N260.xml
+
+CRSANR5L15S2019O1N011.xml
+CRSANR5L15S2019O1N012.xml
+
+CRSANR5L15S2019O1N071.xml
+
+
+# rq: Serait possible de regarder l'utilisation du terme "fausses informations" dans les débats : paraît bien plus fréquent *après* la mise en débat de la loi (une occurrence avant, visiblement). Serait possible de voir 1) quand utilisé 2) par qui 3) pourquoi
+> Construire un vizualizer de termes, pourrait l'avoir en contexte etc.
+> Rendre les débats parlementaires davantage rapidement accessibles, au-delà de la petite phrase)
+
+
