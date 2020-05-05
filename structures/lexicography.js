@@ -42,9 +42,19 @@
  *
  */
 
-const wordRegex = /([^\s,.?!/;:«»<>""()])+/g; // rq: Prend les " - "
+const negativeWordRegex = /([^\s,.?!/;:«»<>""()])+/g; // Useless. Definition of a word by negative char set. rq: Prend les " - "
+const wordRegex = /([A-ZÀ-ÖØ-ÞŒa-zà-öß-öø-ÿœ0-9-]+'?)/g;
+// rq: "'s" for genetive english is problematic (word are divided with apostrophe linked to first coming word of the pair)
 
-const toIgnore = ["la", "le", "les", "un", "des", "de", "du", "en", "à", "aux", "et", "est", "a", "que", "par", "sont", "se", "sur", "ce", "cette", "dans", "ou", "il", "elle", "qu'elle", "qu'il", "qu'en", "sous", "entre", "al", "el", "the"];
+const toIgnore = ["la", "le", "les", "un", "des", "de", "du", "ce", "cette",
+  "l'", "d'", "c'", "s'", "j'", "t'", "qu'", "n'",
+  "à", "au", "aux", "dans", "par", "pour", "en", "vers", "avec", "sans", "sous", "sur", "chez", "contre",
+  "et", "ou", "entre",
+  "est", "a", "sont", "se",
+  "il", "elle",
+  "qui", "que", "quel", "quelle",
+  "qu'elle", "qu'il", "qu'en",
+  "al", "el", "the"];
 
 class Corpus {
   /**
