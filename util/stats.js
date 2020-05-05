@@ -42,9 +42,22 @@ function variance(array) {
  * @param {number[]} array
  * @returns {number}
  */
-function std(array) {
+function standardDeviation(array) {
   let v = variance(array);
   if (v < 0) v = 0; // Convert to 0 to avoid problems regarding machine imprecision
   if (v < 0) throw new Error(`Standard deviation calculus: Variance cannot be negative (is ${v}).`);
   return Math.sqrt(v);
+}
+
+/**
+ * Standard ratio of array.
+ * Mean of ratios between value and mean value.
+ * rq: We don't ^2 and sqrt() to emphazise differences, nor count in same direction ratio >1 and <1 (as would do an absolute value in difference calculus)
+ * @param {number[]} array
+ * @returns {number}
+ */
+function standardRatio(array) {
+  const _mean = mean(array);
+  const ratios = array.map(v => v / _mean);
+  return (mean(ratios) / array.length);
 }

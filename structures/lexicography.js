@@ -1,5 +1,5 @@
 // ESLint global variables
-/* global sum std mean */
+/* global sum standardDeviation mean standardRatio */
 
 /**
  * RÉFLEXION EN AMONT
@@ -481,20 +481,20 @@ class CorpusEntry extends Entry {
 
   /**
    * Distinctiveness, discrimination index of the word. Discriminance.
-   * Standard deviation of its frequencies among every text, normalized by mean frequency.
+   * Standard ratio of its frequencies among every text.
    *
    * Caractère distinctif, discriminant du mot. Discriminance.
-   * Écart-type de la répartition des fréquences du mot entre les textes.
+   * Ratio-type de la répartition des fréquences du mot entre les textes.
    * (ie. y a-t-il des textes où ce mot est très présent alors que dans d'autres il ne l'est pas du tout ?
    * ou au contraire est-il régulièrement présent à la même fréquence ?
    * ce mot est-il très discriminant entre les textes ?
-   * le caractère discriminant est proportionnel à l'écart-type)
+   * le caractère discriminant est proportionnel au ratio-type)
    * rq: On pourrait aussi simplement utiliser la fréquence comme indice de distinctivité
    *
    * @type {number}
    */
   get getDistinctiveness() {
     const frequencies = this.entries.map(textEntry => textEntry.frequency);
-    return (std(frequencies) / this.parent.frequencyMean);
+    return (1 / standardRatio(frequencies));
   }
 }
