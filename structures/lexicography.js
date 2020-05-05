@@ -44,7 +44,7 @@
 
 const wordRegex = /([^\s,.?!/;:«»<>""()])+/g; // rq: Prend les " - "
 
-const toIgnore = ["la", "le", "les", "un", "des", "de", "du", "en", "à", "aux", "et", "est", "a", "que", "par", "sont", "sur", "ce", "cette", "dans", "ou", "qu'elle", "qu'il", "qu'en", "sous", "al", "el", "the"];
+const toIgnore = ["la", "le", "les", "un", "des", "de", "du", "en", "à", "aux", "et", "est", "a", "que", "par", "sont", "se", "sur", "ce", "cette", "dans", "ou", "il", "elle", "qu'elle", "qu'il", "qu'en", "sous", "entre", "al", "el", "the"];
 
 class Corpus {
   /**
