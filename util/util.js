@@ -5,6 +5,7 @@
  * Clone an object (any JavaScript object, including arrays...).
  * @param {*} obj JavaScript object to clone
  * @returns Cloned object.
+ * @see Also https://github.com/angus-c/just/blob/db33a21672e9051d6689fff9b1fbcf939c44ae2c/packages/collection-clone/index.js
  */
 function clone(obj) {
   if (obj == null || typeof obj != "object") {
