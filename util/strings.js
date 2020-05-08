@@ -1,6 +1,19 @@
 // ESLint global variables
 /* global */
 
+function splitByMotivesString(string) {
+  string = string.replace(/c(onsidérant)/gi, "\n* C$1");
+  const regexFirst = /s(ont interdites sur l'ensemble du territoire)/i;
+  const regexSecond = /l(a circulation, la distribution (et|ou) la mise en vente)/i;
+  if (string.match(regexFirst) && string.match(regexFirst).index < string.match(regexSecond).index) {
+    string = string.replace(regexFirst, "\n> S$1");
+  }
+  else {
+    string = string.replace(regexSecond, "\n> L$1");
+  }
+  return string;
+}
+
 /**
  * Normalize string.
  * * Normalize hyphen

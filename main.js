@@ -1,5 +1,5 @@
 // ESLint global variables
-/* global Corpus renderRichtext normalizeString matrice_forEach matrice_toArray array_toMatrice genColorMatrice */
+/* global Corpus renderRichtext normalizeString matrice_forEach matrice_toArray array_toMatrice genColorMatrice splitByMotivesString */
 
 /**
  * The event handler triggered when opening the spreadsheet.
@@ -22,6 +22,8 @@ function onOpen(event) {
 
     .addItem("Uniformiser le texte", 'normalizeText')
 
+    .addItem("Retour à la ligne à chaque exposé de motif", 'splitByMotives')
+
     .addToUi();
 }
 
@@ -36,6 +38,16 @@ function normalizeText() {
   const values = range.getValues();
 
   const res = matrice_forEach(values, normalizeString);
+
+  range.setValues(res);
+}
+
+function splitByMotives() {
+  const sheet = SpreadsheetApp.getActiveSheet();
+  const range = sheet.getActiveRange();
+  const values = range.getValues();
+
+  const res = matrice_forEach(values, splitByMotivesString);
 
   range.setValues(res);
 }
