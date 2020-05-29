@@ -53,6 +53,14 @@ function standardDeviation(array) {
  * Standard ratio of array.
  * Mean of ratios between value and mean value.
  * rq: We don't ^2 and sqrt() to emphazise differences, nor count in same direction ratio >1 and <1 (as would do an absolute value in difference calculus)
+ *
+ * On utilise ici le ratio,
+ * et non la différence comme c'est le cas pour le calcul d'un écart-type,
+ * pour neutraliser l'effet de fréquence des termes :
+ * en effet, certains termes sont beaucoup plus fréquents que d'autre,
+ * ce qui donne lieu à des écart-types très différents.
+ * En un sens, ce ratio constitue un écart-type normalisé.
+ *
  * @param {number[]} array
  * @returns {number}
  */
