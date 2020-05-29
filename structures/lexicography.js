@@ -470,7 +470,6 @@ class CorpusEntry extends Entry {
     /**
      * Array of text entries for this corpus entry.
      * (Defined when processing the corpus dictionary.)
-     * @useless
      */
     this.entries = [];
   }
@@ -491,6 +490,16 @@ class CorpusEntry extends Entry {
 
   /**
    * Distinctiveness, discrimination index of the word. Discriminance.
+   * Proportion of texts this word is present in.
+   * rq: Useless to weight by text number, but makes more sense in the absolute.
+   * @type {number}
+   */
+  get getDistinctiveness() {
+    return (this.entries.length / this.parent.texts.length);
+  }
+
+  /**
+   * Distinctiveness, discrimination index of the word. Discriminance.
    * Standard ratio of its frequencies among every text.
    *
    * Caractère distinctif, discriminant du mot. Discriminance.
@@ -502,9 +511,10 @@ class CorpusEntry extends Entry {
    * rq: On pourrait aussi simplement utiliser la fréquence comme indice de distinctivité
    *
    * @type {number}
+   * @deprecated
    */
-  get getDistinctiveness() {
+  get getDistinctiveness_standardRatio() {
     const frequencies = this.entries.map(textEntry => textEntry.frequency);
-    return (1 / standardRatio(frequencies));
+    return standardRatio(frequencies);
   }
 }

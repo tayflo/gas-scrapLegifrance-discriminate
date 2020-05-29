@@ -59,5 +59,5 @@ function standardDeviation(array) {
 function standardRatio(array) {
   const _mean = mean(array);
   const ratios = array.map(v => v / _mean);
-  return (mean(ratios) / array.length);
+  return mean(ratios);
 }
