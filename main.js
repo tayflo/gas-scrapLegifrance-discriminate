@@ -62,9 +62,9 @@ function colorizeText() {
   const indexes = a.indexes;
 
   const topLeft = [0, 0, 190]; // Dark Blue
-  const botLeft = [200, 210, 245]; // Ligth Blue // rq: alternative: [195, 225, 240]
+  const botLeft = [200, 210, 245]; // Light Blue // rq: alternative: [195, 225, 240]
   const topRight = [200, 0, 0]; // Dark Red
-  const botRight = [245, 210, 200]; // Ligth Red
+  const botRight = [245, 210, 200]; // Light Red
   const granularity = 101;
   const colorMatrice = genColorMatrice(granularity, granularity, topLeft, topRight, botLeft, botRight);
 
