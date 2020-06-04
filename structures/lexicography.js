@@ -159,9 +159,9 @@ class Corpus {
     this.frequencyMean = this.getFrequencyMean;
     this.dictionary.forEach(entry => entry.calculateStatsAdvanced());
 
-    this.distinctivenessMax = this.getDistinctivenessMax;
-    this.distinctivenessMin = this.getDistinctivenessMin;
-    this.distinctivenessRange = this.getDistinctivenessRange;
+    this.banalityMax = this.getBanalityMax;
+    this.banalityMin = this.getBanalityMin;
+    this.banalityRange = this.getBanalityRange;
 
     // These are useless.
     this.specificityMax = this.getSpecificityMax;
@@ -183,21 +183,21 @@ class Corpus {
     return mean(frequencies);
   }
 
-  get getDistinctivenessMax() {
-    const array = Array.from(this.dictionary, ([k, v]) => v.distinctiveness);
+  get getBanalityMax() {
+    const array = Array.from(this.dictionary, ([k, v]) => v.banality);
     return Math.max(...array);
   }
 
-  get getDistinctivenessMin() {
+  get getBanalityMin() {
     // See https://hackernoon.com/how-to-map-a-map-12c6ef1c5b2e
-    // rq: Frequent that distinctivenessMin is NaN.
-    // Because of a distinctiveness equals to NaN. When it happens, Math.min() returns NaN
-    const array = Array.from(this.dictionary, ([k, v]) => v.distinctiveness);
+    // rq: Frequent that banalityMin is NaN.
+    // Because of a banality equals to NaN. When it happens, Math.min() returns NaN
+    const array = Array.from(this.dictionary, ([k, v]) => v.banality);
     return Math.min(...array);
   }
 
-  get getDistinctivenessRange() {
-    return this.distinctivenessMax - this.distinctivenessMin;
+  get getBanalityRange() {
+    return this.banalityMax - this.banalityMin;
   }
 
   // rq: Specificity is bound to a text. So no need to have its range for the corpus.
@@ -482,24 +482,25 @@ class CorpusEntry extends Entry {
   }
 
   /**
-   * Advanced stats (distinctiveness)
+   * Advanced stats (banality)
    */
   calculateStatsAdvanced() {
-    this.distinctiveness = this.getDistinctiveness;
+    this.banality = this.getBanality;
   }
 
   /**
-   * Distinctiveness, discrimination index of the word. Discriminance.
+   * Banality.
    * Proportion of texts this word is present in.
+   * Banality is the reverse of distinctiveness, discriminance, discrimination index of the word.
    * rq: Useless to weight by text number, but makes more sense in the absolute.
    * @type {number}
    */
-  get getDistinctiveness() {
+  get getBanality() {
     return (this.entries.length / this.parent.texts.length);
   }
 
   /**
-   * Distinctiveness, discrimination index of the word. Discriminance.
+   * Banality.
    * Standard ratio of its frequencies among every text.
    *
    * Caractère distinctif, discriminant du mot. Discriminance.
@@ -513,7 +514,7 @@ class CorpusEntry extends Entry {
    * @type {number}
    * @deprecated
    */
-  get getDistinctiveness_standardRatio() {
+  get getBanality_standardRatio() {
     const frequencies = this.entries.map(textEntry => textEntry.frequency);
     return standardRatio(frequencies);
   }

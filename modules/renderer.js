@@ -27,9 +27,9 @@ function renderTextstyle(word, colorMatrice) {
   // From 0 to 100
   const specificity = Math.floor(100 * (word.textEntry.specificity - word.text.specificityMin) / word.text.specificityRange);
   // From 0 to 100
-  const distinctiveness = Math.floor(100 * (word.corpusEntry.distinctiveness - word.corpus.distinctivenessMin) / word.corpus.distinctivenessRange);
+  const banality = Math.floor(100 * (word.corpusEntry.banality - word.corpus.banalityMin) / word.corpus.banalityRange);
 
-  const color = colorMatrice[distinctiveness][specificity];
+  const color = colorMatrice[banality][specificity];
   const textStyle = SpreadsheetApp.newTextStyle()
     .setForegroundColor(color)
     .build();
