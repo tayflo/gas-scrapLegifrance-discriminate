@@ -66,7 +66,7 @@ function matrice_toArray(matrice) {
 /**
  * Convert an array to a matrice, with given indexes.
  * @param {array} array
- * @param {Map.<number, number[]} indexes indexes {arrayIndex: [matriceCol, matriceRow]} Object with coords in matrice paired with index in array.
+ * @param {Map<number, number[]>} indexes indexes {arrayIndex: [matriceCol, matriceRow]} Object with coords in matrice paired with index in array.
  * @returns {[][]} matrice
  */
 function array_toMatrice(array, indexes) {
